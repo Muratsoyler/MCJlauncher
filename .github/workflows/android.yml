@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: build mcjlauncher
     uses: actions/setup-java@v1
-      with: gradlew
+      with:
         java-version: 1.8
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
