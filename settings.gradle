@@ -1,2 +1,2 @@
-include ':mcinabox', ':sharedmodule', ':boat'
-rootProject.name='MCinaBox'
+include ':mcjlauncher', ':sharedmodule', ':boat'
+rootProject.name='MCJlauncher'
