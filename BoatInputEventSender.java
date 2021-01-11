@@ -1,171 +1,55 @@
-package cosine.boat;
-import java.util.Deque;
-import java.util.ArrayDeque;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.InetSocketAddress;
-import java.io.InputStream;
-import java.net.Socket;
-import java.io.OutputStream;
+package cosine.boat.version3;
+import android.app.Activity;
 
 public class BoatInputEventSender{
+	
+	public static int KeyPress              = 2;
+	public static int KeyRelease            = 3;
+	public static int ButtonPress           = 4;
+	public static int ButtonRelease	        = 5;
+	public static int MotionNotify          = 6;
 
-	public static final int KeyPress        = 2;
-	public static final int KeyRelease      = 3;
-	public static final int ButtonPress     = 4;
-	public static final int ButtonRelease	= 5;
-	public static final int MotionNotify	= 6;
-
-	private static final int MESSAGE_SIZE = 10;
-	private static final int CACHE_SIZE = 8 * MESSAGE_SIZE;
-
-
-	private Deque<byte[]> cachedObjs = new ArrayDeque<byte[]>(CACHE_SIZE);
-	private BlockingDeque<byte[]> deque = new LinkedBlockingDeque<byte[]>();
-
-	public ServerSocket serverSock;
-	public Socket sock;
-
-	private OutputStream os;
-	private InputStream is;
-	public int port;
-	public boolean receiving;
-	public boolean running;
-
-	private BoatClientActivity activity;
-	public void startServer(BoatClientActivity a){
-		activity = a;
-		running = true;
-		try{
-			this.serverSock = new ServerSocket();
-			this.serverSock.bind(new InetSocketAddress("127.0.0.1", 0));
-			new Thread(new Sender()).start();
-			new Thread(new Receiver()).start();
-			port = this.serverSock.getLocalPort();
-			System.out.println("BoatInputEventSender is created!The port is:" + port);
-
-		}
-		catch (IOException e){
-			e.printStackTrace();
-		}
-	}
-
-	private class Receiver implements Runnable
-	{
-
-		@Override
-		public void run()
-		{
-			// TODO: Implement this method
-			try {
-
-				while(!receiving){
-
-				}
-				byte[] msg = new byte[1];
-
-				while (running) {
-
-					is.read(msg, 0, 1);
-
-					activity.changeGrab(msg[0]);
-
-				}
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-
-		}
-
-
-	}
-
-	private class Sender implements Runnable
-	{
-
-		@Override
-		public void run()
-		{
-			// TODO: Implement this method
-			try {
-				BoatInputEventSender.this.sock = BoatInputEventSender.this.serverSock.accept();
-				BoatInputEventSender.this.serverSock.close();
-				BoatInputEventSender.this.os = BoatInputEventSender.this.sock.getOutputStream();
-				BoatInputEventSender.this.is = BoatInputEventSender.this.sock.getInputStream();
-				BoatInputEventSender.this.receiving = true;
-				while (running) {
-					byte[] event = deque.take();
-					os.write(event);
-					recycle(event);
-				}
-				sock.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			System.out.println("Exiting input event sender");
-		}
-
-
-	}
-
-
-	private byte[] obtain() {
-		byte[] msg = this.cachedObjs.poll();
-		if (msg == null) {
-			return new byte[MESSAGE_SIZE];
-		}
-		return msg;
-	}
-
-	private void recycle(byte[] msg) {
-		if (this.cachedObjs.size() < CACHE_SIZE) {
-			this.cachedObjs.add(msg);
-		}
-	}
-
-
-
-	public static void writeInt(byte[] src, int offset, int i) {
-		src[0 + offset] = (byte)( i >> (0 * 8));
-		src[1 + offset] = (byte)( i >> (1 * 8));
-		src[2 + offset] = (byte)( i >> (2 * 8));
-		src[3 + offset] = (byte)( i >> (3 * 8));
-	}
-
-
-	public void setMouseButton(byte button, boolean press) {
-		byte[] msg = obtain();
-		msg[0] = (byte) (press ? ButtonPress : ButtonRelease);
-		msg[1] = button;
-		this.deque.add(msg);
-	}
-	public void setPointer(int x, int y) {
-		byte[] msg = obtain();
-		msg[0] = (byte) (MotionNotify);
-		writeInt(msg, 2, x);
-		writeInt(msg, 6, y);
-		this.deque.add(msg);
-	}
-	public void setKey(int keyCode, boolean press , int keyChar){
-		//处理鼠标按钮
+	public static int Button1               = 1;
+	public static int Button2               = 2;
+	public static int Button3               = 3;
+	public static int Button4               = 4;
+	public static int Button5               = 5;
+	public static int Button6               = 6;
+	public static int Button7               = 7;
+	
+	
+	public static void setMouseButton(int button, boolean press) {
+        
+        send(System.nanoTime(), press ? ButtonPress : ButtonRelease, button, 0);
+    }
+	public static void setPointer(int x, int y) {
+        send(System.nanoTime(), MotionNotify, x, y);
+    }
+    
+	public static void setKey(int keyCode, boolean press , int keyChar){
 		if(keyCode == 1001){
-			setMouseButton((byte)1,press);
-			return;
-		}else if(keyCode == 1002){
-			setMouseButton((byte)2,press);
+			setMouseButton(1,press);
 			return;
 		}
-
-
-		byte[] msg = obtain();
-		msg[0] = (byte) (press ? KeyPress : KeyRelease);
-		writeInt(msg, 2, keyCode);
-		writeInt(msg, 6, keyChar);
-		this.deque.add(msg);
+		if(keyCode == 1002){
+			setMouseButton(3,press);
+			return;
+		}
+		
+		send(System.nanoTime(), press ? KeyPress : KeyRelease, keyCode, keyChar);
 	}
-
+	
+	
+	public static native void send(long time, int type, int p1, int p2);
+		
+	public static void setCursorMode(int mode){
+		Activity activity = BoatApplication.getCurrentActivity();
+		if (activity instanceof BoatClientActivity){
+			BoatClientActivity client = (BoatClientActivity)activity;
+			client.setCursorMode(mode);
+		}
+	}
+	static {
+		System.loadLibrary("client3");
+	}
 }
