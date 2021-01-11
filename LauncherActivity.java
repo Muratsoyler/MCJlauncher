@@ -1,8 +1,10 @@
-package cosine.boat;
+package cosine.boat.version3;
 
 import android.app.Activity;
 import android.os.Bundle;
 import com.aof.sharedmodule.Model.ArgsModel;
+
+import cosine.boat.R;
 import cosine.boat.logcat.Logcat;
 import cosine.boat.logcat.LogcatService;
 import ru.ivanarh.jndcrash.NDCrashError;
@@ -18,15 +20,12 @@ public class LauncherActivity extends Activity{
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
 
-        
+        //从序列化中取出参数对象
         argsModel = (ArgsModel) getIntent().getSerializableExtra("LauncherConfig");
 
-       
-        
-
-        //final String logPath = BOAT_HOME + "/log.txt";
-        //Logcat.initializeOutOfProcess(this, logPath, LogcatService.class);
-
+        //初始化日志
+        final String logPath = BOAT_HOME + "/log.txt";
+        Logcat.initializeOutOfProcess(this, logPath, LogcatService.class);
 
         final String reportPath = BOAT_HOME + "/crash.txt";
         System.out.println("Crash report: " + reportPath);
@@ -42,7 +41,7 @@ public class LauncherActivity extends Activity{
 
         setContentView(R.layout.launcher_layout);
 
-        
+        //界面跳转至Client
         Intent intent = new Intent(this, BoatClientActivity.class);
         intent.putExtra("LauncherConfig", argsModel);
         this.startActivity(intent);
