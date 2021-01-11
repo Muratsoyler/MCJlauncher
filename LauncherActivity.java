@@ -18,11 +18,11 @@ public class LauncherActivity extends Activity{
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
 
-        //从序列化中取出参数对象
+        
         argsModel = (ArgsModel) getIntent().getSerializableExtra("LauncherConfig");
 
-        //初始化日志
-        //【release版暂时不开启】
+       
+        
 
         //final String logPath = BOAT_HOME + "/log.txt";
         //Logcat.initializeOutOfProcess(this, logPath, LogcatService.class);
@@ -42,7 +42,7 @@ public class LauncherActivity extends Activity{
 
         setContentView(R.layout.launcher_layout);
 
-        //界面跳转至Client
+        
         Intent intent = new Intent(this, BoatClientActivity.class);
         intent.putExtra("LauncherConfig", argsModel);
         this.startActivity(intent);
